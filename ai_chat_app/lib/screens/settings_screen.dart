@@ -30,6 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _ghTesting = false;
   bool _selfPushing = false;
   String? _selfPushMsg;
+  bool _uncensored = true;
 
   @override
   void initState() {
@@ -64,6 +65,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       _fingerprint = '';
     }
     await NativeService.saveSetting('system_prompt', _systemCtrl.text.trim());
+    await NativeService.saveSetting('uncensored', _uncensored ? '1' : '0');
     await NativeService.saveSetting('voice_server_url', _voiceServerCtrl.text.trim());
     if (mounted) {
       setState(() {});
@@ -534,6 +536,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            elevation: 0,
+            color: theme.colorScheme.surfaceContainerLow,
+            child: SwitchListTile(
+              value: _uncensored,
+              onChanged: (v) => setState(() => _uncensored = v),
+              title: const Text('حالت بدون سانسور'),
+              subtitle: const Text(
+                  'برای همه بخش‌ها (چت و سازنده): بدون رد کردن، بدون مقدمه‌چینی'),
+              secondary:
+                  Icon(Icons.lock_open, color: theme.colorScheme.primary),
             ),
           ),
           const SizedBox(height: 24),

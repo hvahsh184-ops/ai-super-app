@@ -32,6 +32,8 @@ class MainActivity : FlutterActivity() {
     private external fun jniNextMessageId(): Long
 
     private var _mediaPlayer: android.media.MediaPlayer? = null
+    private var _recorder: android.media.MediaRecorder? = null
+    private var _recordPath: String? = null
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -137,6 +139,49 @@ class MainActivity : FlutterActivity() {
                             }
                             _mediaPlayer = null
                             result.success(null)
+                        }
+                        "startRecording" -> {
+                            try {
+                                val dir = java.io.File(cacheDir, "voice")
+                                if (!dir.exists()) dir.mkdirs()
+                                val path = java.io.File(
+                                    dir,
+                                    "voice_${System.currentTimeMillis()}.m4a"
+                                ).absolutePath
+                                val r = if (android.os.Build.VERSION.SDK_INT >= 31) {
+                                    android.media.MediaRecorder(this@MainActivity)
+                                } else {
+                                    @Suppress("DEPRECATION")
+                                    android.media.MediaRecorder()
+                                }
+                                r.setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
+                                r.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4)
+                                r.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC)
+                                r.setAudioEncodingBitRate(64000)
+                                r.setAudioSamplingRate(44100)
+                                r.setOutputFile(path)
+                                r.prepare()
+                                r.start()
+                                _recorder = r
+                                _recordPath = path
+                                result.success(path)
+                            } catch (e: Exception) {
+                                result.success(null)
+                            }
+                        }
+                        "stopRecording" -> {
+                            try {
+                                _recorder?.stop()
+                            } catch (_: Exception) {
+                            }
+                            try {
+                                _recorder?.release()
+                            } catch (_: Exception) {
+                            }
+                            _recorder = null
+                            val p = _recordPath
+                            _recordPath = null
+                            result.success(p)
                         }
                         else -> result.notImplemented()
                     }

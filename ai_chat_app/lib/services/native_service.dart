@@ -25,22 +25,20 @@ class NativeService {
     return v ?? '';
   }
 
-  static Future<void> deleteApiKey() async {
-    if (!isAvailable) throw UnsupportedError('Android only');
-    await _channel.invokeMethod('deleteApiKey');
+  static Future<String> getSetting(String name, {String def = ''}) async {
+    if (!isAvailable) return def;
+    final v = await _channel.invokeMethod<String>('getSetting', {'name': name});
+    return (v is String && v.isNotEmpty) ? v : def;
   }
-
-  // ---------- Settings (Kotlin) ----------
 
   static Future<void> saveSetting(String name, String value) async {
     if (!isAvailable) return;
     await _channel.invokeMethod('saveSetting', {'name': name, 'value': value});
   }
 
-  static Future<String> getSetting(String name, {String def = ''}) async {
-    if (!isAvailable) return def;
-    final v = await _channel.invokeMethod<String>('getSetting', {'name': name});
-    return (v is String && v.isNotEmpty) ? v : def;
+  static Future<void> deleteApiKey() async {
+    if (!isAvailable) throw UnsupportedError('Android only');
+    await _channel.invokeMethod('deleteApiKey');
   }
 
   // ---------- C++ / NDK (JNI) ----------
@@ -92,11 +90,13 @@ class NativeService {
 
   // ---------- Voice recording (Kotlin MediaRecorder) ----------
 
+  /// Starts recording; returns the output file path (null on failure).
   static Future<String?> startRecording() async {
     if (!isAvailable) return null;
     return _channel.invokeMethod<String>('startRecording');
   }
 
+  /// Stops recording; returns the file path (null on failure).
   static Future<String?> stopRecording() async {
     if (!isAvailable) return null;
     return _channel.invokeMethod<String>('stopRecording');
